@@ -1,0 +1,17 @@
+# Abhängigkeiten
+/node_modules
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Umgebungsvariablen: NIE committen (enthält den API-Key)
+.env*
+!.env.example
+
+# Sonstiges
+.DS_Store
+npm-debug.log*
+/coverage
