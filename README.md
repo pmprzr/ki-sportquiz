@@ -9,17 +9,17 @@ und 3. Liga) mit der OpenAI-API Quizfragen erzeugt. Das Modell darf nur aus den 
 ## Status
 
 - [x] Server-Modul für OpenLigaDB mit Laufzeitvalidierung (zod), Caching und Timeout
-- [x] Route Handler `GET /api/liga/[league]` und Startseite mit Tabelle und Ergebnissen
+- [x] Route Handler `GET /api/league/[league]` und Startseite mit Tabelle und Ergebnissen
 - [x] Tests für Saisonlogik, Schemas und Mapping
-- [ ] Quizfragen mit OpenAI (strukturierte JSON-Ausgabe, per zod geprüft)
-- [ ] Quiz-Oberfläche
+- [x] Quizfragen mit OpenAI (strukturierte JSON-Ausgabe, per zod geprüft)
+- [x] Quiz-Oberfläche mit Server Actions; Lösungen bleiben verschlüsselt auf dem Server
 - [ ] Optional: Supabase für gespeicherte Quizze, Highscores und Login
 
 ## Lokal starten
 
 ```bash
 npm install
-cp .env.example .env.local   # OPENAI_API_KEY eintragen
+cp .env.example .env.local   # OPENAI_API_KEY und QUIZ_SECRET eintragen
 npm test
 npm run dev                  # http://localhost:3000
 ```

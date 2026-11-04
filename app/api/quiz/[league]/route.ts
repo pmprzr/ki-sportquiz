@@ -9,7 +9,7 @@ import { QUESTION_COUNT_MAX, QUESTION_COUNT_MIN } from "@/lib/quiz/schema";
 const paramsSchema = z.object({ league: z.enum(LEAGUE_SHORTCUTS) });
 const countSchema = z.coerce.number().int().min(QUESTION_COUNT_MIN).max(QUESTION_COUNT_MAX).catch(5);
 
-// GET /api/quiz/bl1?anzahl=5 – nur zum Testen in der Entwicklung.
+// GET /api/quiz/bl1?count=5 – nur zum Testen in der Entwicklung.
 // Jeder Aufruf kostet Geld, deshalb ist der Endpunkt in Produktion abgeschaltet.
 export async function GET(request: Request, { params }: { params: Promise<{ league: string }> }) {
   if (process.env.NODE_ENV === "production") {
@@ -23,7 +23,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
       { status: 400 },
     );
   }
-  const count = countSchema.parse(new URL(request.url).searchParams.get("anzahl") ?? undefined);
+  const count = countSchema.parse(new URL(request.url).searchParams.get("count") ?? undefined);
 
   try {
     const snapshot = await getLeagueSnapshot(parsed.data.league);
