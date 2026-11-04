@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { LeagueSnapshot } from "../lib/openligadb/types";
-import { buildUserPrompt, formatSeason, serializeData, SYSTEM_PROMPT } from "../lib/quiz/prompt";
+import {
+  buildUserPrompt,
+  describeOutcome,
+  formatSeason,
+  serializeData,
+  SYSTEM_PROMPT,
+} from "../lib/quiz/prompt";
 
 const snapshot: LeagueSnapshot = {
   league: "bl2",
@@ -67,5 +73,13 @@ describe("formatSeason", () => {
   it("formatiert die Saison", () => {
     expect(formatSeason(2026)).toBe("2026/27");
     expect(formatSeason(2099)).toBe("2099/00");
+  });
+});
+
+describe("describeOutcome", () => {
+  it("benennt Heimsieg, Auswärtssieg und Unentschieden eindeutig", () => {
+    expect(describeOutcome("Elversberg", "Mainz", 4, 1)).toBe("Heimsieg Elversberg, Niederlage Mainz");
+    expect(describeOutcome("Elversberg", "Mainz", 0, 2)).toBe("Auswärtssieg Mainz, Niederlage Elversberg");
+    expect(describeOutcome("A", "B", 2, 2)).toBe("Unentschieden");
   });
 });

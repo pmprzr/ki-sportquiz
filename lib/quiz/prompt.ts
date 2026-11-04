@@ -38,8 +38,19 @@ export function toPromptData(s: LeagueSnapshot) {
       heim: m.home,
       gast: m.away,
       ergebnis: `${m.homeGoals}:${m.awayGoals}`,
+      ausgang: describeOutcome(m.home, m.away, m.homeGoals, m.awayGoals),
     })),
   };
+}
+
+/**
+ * Sieger und Heim/Auswärts ausdrücklich in die Daten schreiben, statt das Modell
+ * es aus "4:1" ableiten zu lassen – dabei verwechselt es leicht Heim und Gast.
+ */
+export function describeOutcome(home: string, away: string, homeGoals: number, awayGoals: number): string {
+  if (homeGoals > awayGoals) return `Heimsieg ${home}, Niederlage ${away}`;
+  if (homeGoals < awayGoals) return `Auswärtssieg ${away}, Niederlage ${home}`;
+  return "Unentschieden";
 }
 
 /**
