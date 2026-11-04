@@ -387,7 +387,58 @@ Server. Ohne Datenbank muss sich der Server die Lösung trotzdem merken – desh
 
 ---
 
-## Teil E: Wie es weitergeht
+## Teil E: Design
+
+### E1. Übernehmen
+
+Inhalt von `design.zip` in den Projektordner entpacken (überschreiben), dann `npm run dev`.
+Beim ersten Start lädt Next.js die Schriften einmalig von Google herunter.
+
+```bash
+git add -A
+git commit -m "Stadium design: pitch theme, scoreboard, shared header"
+git push
+```
+
+### E2. Idee
+
+Das Design kommt aus dem Thema: Rasen (dunkelgrün mit Mähstreifen), Kreide (helle Flächen, Linie unter
+dem Titel wie eine Seitenauslinie) und Flutlicht (Gelb für den Spielstand). Der Punktestand ist ein
+Spielstand „richtig : falsch“, am Ende gibt es einen Endstand mit Sieg, Unentschieden oder Niederlage.
+Schriften: Barlow Condensed für Titel und Zahlen (wie Trikotnummern), Barlow für Fließtext.
+
+### E3. Technik fürs Gespräch
+
+**Design-Tokens mit Tailwind v4 (`@theme` in `app/globals.css`)**
+In Tailwind v4 gibt es keine `tailwind.config.js` mehr. Farben und Schriften werden als CSS-Variablen in
+`@theme` definiert, Tailwind erzeugt daraus die Klassen: `--color-chalk` → `bg-chalk`, `text-chalk`,
+`bg-chalk/50`. Vorteil: Eine Farbe ändert man an einer Stelle, und alle Komponenten sind stimmig.
+`@theme inline` wird für Werte genutzt, die selbst auf Variablen verweisen (hier die Schriften).
+
+**Schriften mit `next/font` (`app/layout.tsx`)**
+`next/font/google` lädt die Schriften beim Build und liefert sie von der eigenen Domain aus: kein Request
+an Google aus dem Browser (Datenschutz), kein Layout-Springen beim Laden. Die Schriften werden als
+CSS-Variablen (`--font-barlow`) bereitgestellt und in `@theme` eingebunden.
+
+**Komponenten**
+- `components/SiteHeader.tsx`: gemeinsame Kopfzeile für beide Seiten, `aria-current="page"` markiert die
+  aktive Seite (für Screenreader und für die gelbe Unterstreichung).
+- In `QuizApp.tsx` stehen kleine Hilfskomponenten (`ChoiceTile`, `Scoreboard`, `Progress`, `LoadingBall`,
+  `ErrorNote`) **außerhalb** der Hauptkomponente. Innerhalb definiert, würde React sie bei jedem Rendern als
+  neue Komponente behandeln und neu aufbauen.
+- `results` speichert je Frage richtig/falsch. Punktestand und Fortschrittsleiste werden daraus **abgeleitet**
+  statt extra gespeichert. So kann der Zustand nicht widersprüchlich werden.
+
+**Barrierefreiheit**
+- Liga und Anzahl sind echte Radio-Buttons (`sr-only` versteckt, gestaltet über `peer-checked:`).
+  Tastatur und Screenreader funktionieren dadurch ohne Zusatzcode.
+- Sichtbarer Tastaturfokus (`:focus-visible`), auf Rasen gelb, auf hellen Flächen grün.
+- Richtig/falsch wird nicht nur über Farbe gezeigt, sondern auch als Text („Richtige Antwort“, „Deine Antwort“).
+- Die einzige Animation (rollender Ball beim Laden) entfällt bei `prefers-reduced-motion`.
+
+---
+
+## Teil F: Wie es weitergeht
 
 - **Schritt 5 (optional):** Deployment auf Vercel mit Umgebungsvariablen und Rate Limit.
 - **Schritt 6:** Supabase: Login, gespeicherte Quizze, serverseitige Punkte und Highscores.

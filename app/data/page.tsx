@@ -1,11 +1,26 @@
 import Link from "next/link";
 import { z } from "zod";
+import SiteHeader from "@/components/SiteHeader";
 import { getLeagueSnapshot } from "@/lib/openligadb/client";
 import { LEAGUE_LABELS, LEAGUE_SHORTCUTS } from "@/lib/openligadb/leagues";
-import type { LeagueSnapshot } from "@/lib/openligadb/types";
+import type { LeagueSnapshot, MatchResult } from "@/lib/openligadb/types";
+import { formatSeason } from "@/lib/quiz/prompt";
 
 // Ungültige oder fehlende Liga → Standard bl1
 const leagueParam = z.enum(LEAGUE_SHORTCUTS).catch("bl1");
+
+/** Ergebnisse nach Spieltag gruppieren, neuester Spieltag zuerst. */
+function groupByMatchday(results: MatchResult[]): [number, MatchResult[]][] {
+  const groups = new Map<number, MatchResult[]>();
+  for (const m of results) {
+    groups.set(m.matchday, [...(groups.get(m.matchday) ?? []), m]);
+  }
+  return [...groups.entries()].sort(([a], [b]) => b - a);
+}
+
+function signed(n: number): string {
+  return n > 0 ? `+${n}` : String(n);
+}
 
 // Server Component: läuft nur auf dem Server, darf daher getLeagueSnapshot direkt aufrufen.
 export default async function DataPage({
@@ -23,20 +38,21 @@ export default async function DataPage({
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
-      <Link href="/" className="text-sm text-slate-500 hover:underline">← Zum Quiz</Link>
-      <h1 className="mt-2 text-3xl font-bold">Datenbasis</h1>
-      <p className="mt-2 text-slate-600">
-        Aus diesen Daten erzeugt die KI die Quizfragen.
+    <main className="mx-auto max-w-2xl px-4 pb-16 pt-8 sm:pt-12">
+      <SiteHeader current="data" />
+      <p className="mt-5 max-w-prose text-lg text-chalk-dim">
+        Aus diesen Daten erstellt die KI die Quizfragen. Quelle ist OpenLigaDB, die Daten werden alle
+        fünf Minuten aktualisiert.
       </p>
 
-      <nav className="mt-6 flex gap-2">
+      <nav aria-label="Liga" className="mt-6 flex flex-wrap gap-2">
         {LEAGUE_SHORTCUTS.map((l) => (
           <Link
             key={l}
             href={`/data?league=${l}`}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-              l === league ? "bg-slate-900 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"
+            aria-current={l === league ? "page" : undefined}
+            className={`rounded-full px-4 py-1.5 font-display text-lg font-semibold ${
+              l === league ? "bg-chalk text-ink" : "text-chalk-dim ring-1 ring-chalk/30 hover:text-chalk"
             }`}
           >
             {LEAGUE_LABELS[l]}
@@ -45,52 +61,72 @@ export default async function DataPage({
       </nav>
 
       {!snapshot ? (
-        <p className="mt-8 rounded-lg bg-red-50 p-4 text-red-700">
-          Ligadaten konnten nicht geladen werden. Details stehen im Terminal.
+        <p role="alert" className="mt-6 rounded-lg border-l-4 border-goal bg-goal/10 p-4 text-chalk">
+          Die Ligadaten konnten nicht geladen werden. Die genaue Ursache steht im Terminal.
         </p>
       ) : (
-        <div className="mt-8 grid gap-8">
-          <section>
-            <h2 className="text-xl font-semibold">
-              Tabelle {snapshot.leagueName} {snapshot.season}/{(snapshot.season + 1) % 100}
+        <div className="mt-6 grid gap-6">
+          <section className="rounded-2xl bg-chalk p-5 text-ink shadow-2xl shadow-black/30 sm:p-6">
+            <h2 className="font-display text-3xl font-semibold">
+              Tabelle {snapshot.leagueName} {formatSeason(snapshot.season)}
             </h2>
-            <table className="mt-3 w-full text-sm">
-              <thead className="text-left text-slate-500">
-                <tr>
-                  <th className="py-1">#</th>
-                  <th>Team</th>
-                  <th className="text-right">Sp.</th>
-                  <th className="text-right">Diff.</th>
-                  <th className="text-right">Pkt.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {snapshot.standings.map((s) => (
-                  <tr key={s.team} className="border-t border-slate-200">
-                    <td className="py-1">{s.position}</td>
-                    <td>{s.team}</td>
-                    <td className="text-right">{s.played}</td>
-                    <td className="text-right">{s.goalDiff}</td>
-                    <td className="text-right font-semibold">{s.points}</td>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm tabular-nums">
+                <thead className="text-left text-ink/60">
+                  <tr className="border-b-2 border-ink/15">
+                    <th className="py-2 pr-2 font-medium">Pl.</th>
+                    <th className="font-medium">Team</th>
+                    <th className="px-2 text-right font-medium">Sp.</th>
+                    <th className="hidden px-2 text-right font-medium sm:table-cell">S</th>
+                    <th className="hidden px-2 text-right font-medium sm:table-cell">U</th>
+                    <th className="hidden px-2 text-right font-medium sm:table-cell">N</th>
+                    <th className="px-2 text-right font-medium">Tore</th>
+                    <th className="px-2 text-right font-medium">Diff.</th>
+                    <th className="pl-2 text-right font-medium">Pkt.</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {snapshot.standings.map((s) => (
+                    <tr key={s.team} className="border-b border-ink/10 last:border-0">
+                      <td className="py-2 pr-2 text-ink/60">{s.position}</td>
+                      <td className="font-medium">{s.team}</td>
+                      <td className="px-2 text-right">{s.played}</td>
+                      <td className="hidden px-2 text-right sm:table-cell">{s.won}</td>
+                      <td className="hidden px-2 text-right sm:table-cell">{s.draw}</td>
+                      <td className="hidden px-2 text-right sm:table-cell">{s.lost}</td>
+                      <td className="px-2 text-right">
+                        {s.goalsFor}:{s.goalsAgainst}
+                      </td>
+                      <td className="px-2 text-right">{signed(s.goalDiff)}</td>
+                      <td className="pl-2 text-right font-semibold">{s.points}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
 
-          <section>
-            <h2 className="text-xl font-semibold">Letzte Ergebnisse</h2>
-            <ul className="mt-3 space-y-1 text-sm">
-              {snapshot.recentResults.map((m) => (
-                <li key={`${m.kickoffUtc}-${m.home}`}>
-                  <span className="text-slate-500">{m.matchday}. Spieltag:</span> {m.home}{" "}
-                  <strong>
-                    {m.homeGoals}:{m.awayGoals}
-                  </strong>{" "}
-                  {m.away}
-                </li>
-              ))}
-            </ul>
+          <section className="rounded-2xl bg-chalk p-5 text-ink shadow-2xl shadow-black/30 sm:p-6">
+            <h2 className="font-display text-3xl font-semibold">Letzte Ergebnisse</h2>
+            {groupByMatchday(snapshot.recentResults).map(([matchday, matches]) => (
+              <div key={matchday} className="mt-5">
+                <h3 className="font-display text-xl font-semibold text-ink/70">{matchday}. Spieltag</h3>
+                <ul className="mt-2 divide-y divide-ink/10">
+                  {matches.map((m) => (
+                    <li
+                      key={`${m.kickoffUtc}-${m.home}`}
+                      className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-2.5 text-sm"
+                    >
+                      <span className="text-right font-medium">{m.home}</span>
+                      <span className="rounded-md bg-pitch-900 px-2.5 py-0.5 font-display text-lg font-semibold tabular-nums text-flood">
+                        {m.homeGoals}:{m.awayGoals}
+                      </span>
+                      <span className="font-medium">{m.away}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </section>
         </div>
       )}

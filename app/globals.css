@@ -1,1 +1,66 @@
 @import "tailwindcss";
+
+/*
+ * Design-Tokens (Tailwind v4): Jede Variable unter @theme erzeugt passende Utility-Klassen,
+ * z. B. --color-chalk → bg-chalk, text-chalk; --font-display → font-display.
+ */
+@theme {
+  --color-pitch-950: #072619; /* Anzeigetafel */
+  --color-pitch-900: #0c3a28; /* Rasen, Seitenhintergrund */
+  --color-pitch-800: #114a33; /* Buttons */
+  --color-pitch-700: #1a5e42; /* Hover, kommende Fragen */
+  --color-chalk: #eef3ee; /* Kreide: helle Flächen und Text auf Rasen */
+  --color-chalk-dim: #a9bfb1; /* Nebentext auf Rasen */
+  --color-ink: #0b2219; /* Text auf Kreide */
+  --color-flood: #f4d90b; /* Flutlicht: Spielstand, aktuelle Frage */
+  --color-flood-dim: #dcc300;
+  --color-hit: #2fbf71; /* richtig (Flächen, Linien) */
+  --color-hit-ink: #12703f; /* richtig (Text, ausreichend Kontrast) */
+  --color-goal: #e5484d; /* falsch (Flächen, Linien) */
+  --color-goal-ink: #b4232a; /* falsch (Text) */
+}
+
+/* Schriften kommen über next/font als CSS-Variablen aus layout.tsx */
+@theme inline {
+  --font-sans: var(--font-barlow), system-ui, sans-serif;
+  --font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+}
+
+body {
+  background-color: var(--color-pitch-900);
+  /* Mähstreifen wie auf dem Rasen */
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 96px,
+    rgb(255 255 255 / 0.022) 96px 192px
+  );
+  color: var(--color-chalk);
+}
+
+/* Sichtbarer Tastaturfokus: gelb auf Rasen, grün auf Kreide */
+:focus-visible {
+  outline: 3px solid var(--color-flood);
+  outline-offset: 2px;
+}
+.on-chalk :focus-visible {
+  outline-color: var(--color-pitch-700);
+}
+
+/* Ladeanzeige: ein Ball rollt über die Linie (einzige Animation der Seite) */
+@keyframes roll {
+  from {
+    left: 0;
+  }
+  to {
+    left: calc(100% - 1rem);
+  }
+}
+.ball {
+  animation: roll 1.2s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ball {
+    animation: none;
+    left: calc(50% - 0.5rem);
+  }
+}

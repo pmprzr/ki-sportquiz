@@ -1,16 +1,14 @@
-import Link from "next/link";
 import QuizApp from "@/components/QuizApp";
+import SiteHeader from "@/components/SiteHeader";
 
-// Server Component: rendert den statischen Rahmen; die interaktive QuizApp ist eine Client Component.
+// Server Component: statischer Rahmen. Die interaktive QuizApp ist eine Client Component.
 export default function Home() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="text-3xl font-bold">KI-Sportquiz</h1>
-      <p className="mt-2 text-slate-600">
-        Quizfragen aus aktuellen Tabellen und Ergebnissen, erzeugt mit der OpenAI-API.{" "}
-        <Link href="/data" className="underline">
-          Datenbasis ansehen
-        </Link>
+    <main className="mx-auto max-w-2xl px-4 pb-16 pt-8 sm:pt-12">
+      <SiteHeader current="quiz" />
+      <p className="mt-5 max-w-prose text-lg text-chalk-dim">
+        Die KI liest die aktuelle Tabelle und die letzten Spiele und stellt dir Fragen dazu. Zu jeder
+        Antwort siehst du den Beleg aus den Daten.
       </p>
       <QuizApp />
     </main>

@@ -9,6 +9,12 @@ export const LEAGUE_LABELS: Record<LeagueShortcut, string> = {
   bl3: "3. Liga",
 };
 
+export const LEAGUE_TEAM_COUNT: Record<LeagueShortcut, number> = {
+  bl1: 18,
+  bl2: 18,
+  bl3: 20,
+};
+
 /**
  * OpenLigaDB benennt eine Saison nach ihrem Startjahr (2026/27 → 2026).
  * Ab Juli zählt das laufende Jahr, davor das Vorjahr.
